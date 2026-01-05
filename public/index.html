@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0a0a0a">
+    <title>Check-In | Desde el Patio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #141414;
+            --bg-card: #1a1a1a;
+            --bg-card-hover: #222222;
+            --accent: #f97316;
+            --accent-glow: rgba(249, 115, 22, 0.3);
+            --text-primary: #fafafa;
+            --text-secondary: #a1a1aa;
+            --text-muted: #52525b;
+            --success: #22c55e;
+            --success-bg: rgba(34, 197, 94, 0.15);
+            --border: #27272a;
+            --font-sans: 'Instrument Sans', -apple-system, sans-serif;
+            --font-mono: 'Space Mono', monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            min-height: 100dvh;
+            overflow-x: hidden;
+        }
+
+        .app {
+            max-width: 100%;
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10, 10, 10, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 1.25rem;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .logo {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+        }
+
+        .logo-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, var(--accent), #fb923c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo-subtitle {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .sync-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0.75rem;
+            background: var(--bg-secondary);
+            border-radius: 100px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sync-status:hover {
+            background: var(--bg-card);
+        }
+
+        .sync-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        .sync-dot.offline {
+            background: var(--accent);
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Search */
+        .search-container {
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.875rem 1rem 0.875rem 2.75rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-family: var(--font-sans);
+            font-size: 1rem;
+            color: var(--text-primary);
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .search-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+            padding: 1rem 1.25rem;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-family: var(--font-mono);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1;
+        }
+
+        .stat-number.checked {
+            color: var(--success);
+        }
+
+        .stat-number.pending {
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 0.25rem;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            padding: 0 1.25rem;
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 0.875rem;
+            background: none;
+            border: none;
+            font-family: var(--font-sans);
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+            position: relative;
+            transition: color 0.2s;
+        }
+
+        .tab.active {
+            color: var(--text-primary);
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--accent);
+        }
+
+        /* Guest List */
+        .guest-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.75rem 1.25rem 6rem;
+        }
+
+        .letter-group {
+            margin-bottom: 0.5rem;
+        }
+
+        .letter-header {
+            position: sticky;
+            top: 0;
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            padding: 0.5rem 0;
+            background: var(--bg-primary);
+            z-index: 10;
+        }
+
+        .guest-card {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg-card);
+            border-radius: 12px;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .guest-card:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .guest-card:active {
+            transform: scale(0.98);
+        }
+
+        .guest-card.checked {
+            background: var(--success-bg);
+            border-color: rgba(34, 197, 94, 0.3);
+        }
+
+        .guest-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--bg-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+
+        .guest-card.checked .guest-avatar {
+            background: var(--success);
+            color: #fff;
+        }
+
+        .guest-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .guest-name {
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .guest-extras {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 0.15rem;
+        }
+
+        .guest-check {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+
+        .guest-card.checked .guest-check {
+            background: var(--success);
+            border-color: var(--success);
+        }
+
+        .check-icon {
+            opacity: 0;
+            color: #fff;
+            transition: opacity 0.2s;
+        }
+
+        .guest-card.checked .check-icon {
+            opacity: 1;
+        }
+
+        /* Report View */
+        .report-view {
+            display: none;
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.25rem 1.25rem 6rem;
+        }
+
+        .report-view.active {
+            display: block;
+        }
+
+        .report-section {
+            margin-bottom: 2rem;
+        }
+
+        .report-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .report-title .count {
+            background: var(--bg-secondary);
+            padding: 0.2rem 0.5rem;
+            border-radius: 100px;
+            font-family: var(--font-mono);
+        }
+
+        .report-guest {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            background: var(--bg-card);
+            border-radius: 10px;
+            margin-bottom: 0.4rem;
+        }
+
+        .report-guest.attended {
+            border-left: 3px solid var(--success);
+        }
+
+        .report-guest.absent {
+            border-left: 3px solid var(--text-muted);
+            opacity: 0.7;
+        }
+
+        .report-guest-name {
+            flex: 1;
+            font-size: 0.95rem;
+        }
+
+        .report-guest-extras {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .report-guest-time {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        /* Export Button */
+        .export-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+            padding: 1rem;
+            background: var(--accent);
+            border: none;
+            border-radius: 12px;
+            font-family: var(--font-sans);
+            font-size: 1rem;
+            font-weight: 600;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 1rem;
+        }
+
+        .export-btn:hover {
+            filter: brightness(1.1);
+        }
+
+        .export-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-muted);
+        }
+
+        .empty-state svg {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 5rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 0.875rem 1.5rem;
+            border-radius: 100px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 1000;
+            white-space: nowrap;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            border-color: var(--success);
+            color: var(--success);
+        }
+
+        /* Confirmation Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(4px);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 1.5rem;
+            max-width: 320px;
+            width: 100%;
+            text-align: center;
+            animation: modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+        }
+
+        .modal-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff;
+            margin: 0 auto 1rem;
+        }
+
+        .modal-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .modal-extras {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .modal-btn {
+            padding: 0.875rem;
+            border-radius: 12px;
+            font-family: var(--font-sans);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .modal-btn.cancel {
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+        }
+
+        .modal-btn.confirm {
+            background: var(--success);
+            color: #fff;
+        }
+
+        .modal-btn.undo {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .modal-btn:active {
+            transform: scale(0.96);
+        }
+
+        /* Device ID Display */
+        .device-info {
+            position: fixed;
+            bottom: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            background: var(--bg-secondary);
+            padding: 0.4rem 0.75rem;
+            border-radius: 100px;
+            z-index: 50;
+        }
+
+        /* Hide guest list when report is active */
+        .guest-list.hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <header class="header">
+            <div class="header-top">
+                <div class="logo">
+                    <div class="logo-title">Desde el Patio</div>
+                    <div class="logo-subtitle">Cartagena 2026</div>
+                </div>
+                <div class="sync-status" id="syncStatus" onclick="syncNow()">
+                    <div class="sync-dot" id="syncDot"></div>
+                    <span id="syncText">Sincronizado</span>
+                </div>
+            </div>
+            <div class="search-container">
+                <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.3-4.3"></path>
+                </svg>
+                <input type="text" class="search-input" id="searchInput" placeholder="Buscar invitado..." autocomplete="off">
+            </div>
+        </header>
+
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-number" id="totalGuests">0</div>
+                <div class="stat-label">Total</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number checked" id="checkedIn">0</div>
+                <div class="stat-label">Ingresaron</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number pending" id="pending">0</div>
+                <div class="stat-label">Pendientes</div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="list">Lista</button>
+            <button class="tab" data-tab="report">Reporte</button>
+        </div>
+
+        <div class="guest-list" id="guestList"></div>
+
+        <div class="report-view" id="reportView">
+            <button class="export-btn" onclick="exportReport()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Exportar Reporte
+            </button>
+            <div id="reportContent"></div>
+        </div>
+
+        <div class="device-info" id="deviceInfo"></div>
+    </div>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <div class="modal-avatar" id="modalAvatar"></div>
+            <div class="modal-name" id="modalName"></div>
+            <div class="modal-extras" id="modalExtras"></div>
+            <div class="modal-buttons" id="modalButtons"></div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // Guest data from CSV
+        const GUESTS_DATA = [
+            { firstName: "Alexandra", lastName: "Nieves Lozano", extras: 0 },
+            { firstName: "Alexandro", lastName: "Galvis", extras: 0 },
+            { firstName: "Alvaro", lastName: "Urzola", extras: 0 },
+            { firstName: "Ando", lastName: "Tous", extras: 3 },
+            { firstName: "Anderson", lastName: "Duvan Reales Osorno", extras: 0 },
+            { firstName: "Andres", lastName: "Carrazco", extras: 0 },
+            { firstName: "Andres", lastName: "Manjarres", extras: 0 },
+            { firstName: "Andrés", lastName: "Murillo", extras: 0 },
+            { firstName: "Andrés", lastName: "Polanco", extras: 0 },
+            { firstName: "Armando", lastName: "Ibarra Cano", extras: 0 },
+            { firstName: "Aura", lastName: "de Rodríguez", extras: 0 },
+            { firstName: "Bridi", lastName: "Jerez Malambo", extras: 0 },
+            { firstName: "Bronson", lastName: "Tennis", extras: 1 },
+            { firstName: "Camila", lastName: "Cantor Sanchez", extras: 0 },
+            { firstName: "Carlos", lastName: "Antonio Ortega Arrieta", extras: 0 },
+            { firstName: "Carlos", lastName: "Gonzales Tatto", extras: 0 },
+            { firstName: "Carmen", lastName: "Vergara Martínez", extras: 0 },
+            { firstName: "Cindy", lastName: "Cedeño", extras: 1 },
+            { firstName: "Cris", lastName: "Morelo", extras: 0 },
+            { firstName: "Cristina", lastName: "Martínez Taborda", extras: 0 },
+            { firstName: "Damian", lastName: "Pérez", extras: 0 },
+            { firstName: "Daniel", lastName: "Ricacardo Rodríguez", extras: 0 },
+            { firstName: "Danny", lastName: "Torres Cassiani", extras: 0 },
+            { firstName: "Diana", lastName: "Ospino Maza", extras: 0 },
+            { firstName: "Duva", lastName: "Duva", extras: 0 },
+            { firstName: "Eduardo", lastName: "Guerrero", extras: 0 },
+            { firstName: "Eliana", lastName: "Castellón", extras: 0 },
+            { firstName: "Elkin", lastName: "Baquero", extras: 0 },
+            { firstName: "Erika", lastName: "Rodríguez", extras: 0 },
+            { firstName: "Esteban", lastName: "Galvis", extras: 0 },
+            { firstName: "Fabian", lastName: "Beleño", extras: 0 },
+            { firstName: "Fausto", lastName: "Serrano", extras: 3 },
+            { firstName: "Fernando", lastName: "Luna", extras: 0 },
+            { firstName: "Flor", lastName: "Rodríguez", extras: 0 },
+            { firstName: "Gabriel", lastName: "Sanchez", extras: 0 },
+            { firstName: "Gerardo", lastName: "Jaramillo", extras: 0 },
+            { firstName: "Gina", lastName: "de Donado", extras: 0 },
+            { firstName: "Gloria", lastName: "Martínez", extras: 0 },
+            { firstName: "Gustavo", lastName: "García", extras: 0 },
+            { firstName: "Harold", lastName: "Guzmán", extras: 0 },
+            { firstName: "Hernando", lastName: "Araujo", extras: 1 },
+            { firstName: "Ismael", lastName: "López", extras: 0 },
+            { firstName: "Ivan", lastName: "Herrera", extras: 0 },
+            { firstName: "Jaime", lastName: "García", extras: 0 },
+            { firstName: "Jairo", lastName: "Barrios", extras: 0 },
+            { firstName: "Jennifer", lastName: "Acosta", extras: 0 },
+            { firstName: "Jessica", lastName: "Martínez", extras: 0 },
+            { firstName: "Jesus", lastName: "Manga", extras: 0 },
+            { firstName: "Joan", lastName: "Castellón", extras: 0 },
+            { firstName: "Jorge", lastName: "Barrios", extras: 1 },
+            { firstName: "Jorge", lastName: "Herrera", extras: 0 },
+            { firstName: "Jose", lastName: "Doria", extras: 0 },
+            { firstName: "José", lastName: "Morales", extras: 0 },
+            { firstName: "Juan", lastName: "Martínez", extras: 0 },
+            { firstName: "Juan Carlos", lastName: "Rodríguez", extras: 0 },
+            { firstName: "Julio", lastName: "García", extras: 0 },
+            { firstName: "Karen", lastName: "Hernández", extras: 0 },
+            { firstName: "Katia", lastName: "Mercado", extras: 1 },
+            { firstName: "Kelly", lastName: "Arroyo", extras: 0 },
+            { firstName: "Kevin", lastName: "Deulofeut", extras: 0 },
+            { firstName: "Laura", lastName: "Espinoza", extras: 2 },
+            { firstName: "Lena", lastName: "Mercado", extras: 0 },
+            { firstName: "Leo", lastName: "Gómez", extras: 0 },
+            { firstName: "Leopoldo", lastName: "Hernández", extras: 0 },
+            { firstName: "Lina", lastName: "Rodríguez", extras: 0 },
+            { firstName: "Liseth", lastName: "Hernández", extras: 0 },
+            { firstName: "Luisa", lastName: "Gómez", extras: 0 },
+            { firstName: "Manuel", lastName: "Herrera", extras: 1 },
+            { firstName: "Marcela", lastName: "Barrios", extras: 0 },
+            { firstName: "Marco", lastName: "Jiménez", extras: 0 },
+            { firstName: "Maria", lastName: "González", extras: 0 },
+            { firstName: "Mariana", lastName: "Ramos", extras: 0 },
+            { firstName: "Mario", lastName: "López", extras: 0 },
+            { firstName: "Martha", lastName: "Pérez", extras: 0 },
+            { firstName: "Mauricio", lastName: "Díaz", extras: 0 },
+            { firstName: "Miguel", lastName: "González", extras: 0 },
+            { firstName: "Mónica", lastName: "Castellón", extras: 0 },
+            { firstName: "Natalia", lastName: "González", extras: 0 },
+            { firstName: "Nelson", lastName: "Barrios", extras: 0 },
+            { firstName: "Néstor", lastName: "Herrera", extras: 0 },
+            { firstName: "Nicolas", lastName: "Ramos", extras: 0 },
+            { firstName: "Oscar", lastName: "de Avila Cuba", extras: 1 },
+            { firstName: "Oscar Andres", lastName: "Mercado Rodelo", extras: 0 },
+            { firstName: "Paola", lastName: "Arteaga", extras: 2 },
+            { firstName: "Pavel", lastName: "Ruíz", extras: 0 },
+            { firstName: "Ramón", lastName: "Ramírez Pérez", extras: 0 },
+            { firstName: "Rodny", lastName: "Silgado Cabarcas", extras: 0 },
+            { firstName: "Ronny", lastName: "Rodriguez Blanquicett", extras: 0 },
+            { firstName: "Sandra", lastName: "Cardozo", extras: 0 },
+            { firstName: "Saray", lastName: "Ramírez Martínez", extras: 0 },
+            { firstName: "Sheila", lastName: "Montes", extras: 0 },
+            { firstName: "Sonia Margarita", lastName: "González Castellanos", extras: 0 },
+            { firstName: "Steffi", lastName: "Baldiris Alvarez", extras: 0 },
+            { firstName: "Suize", lastName: "Glaser", extras: 0 },
+            { firstName: "Tatiana", lastName: "Mejía", extras: 0 },
+            { firstName: "Thalia", lastName: "Alvarez", extras: 0 },
+            { firstName: "Tiko", lastName: "Tambor", extras: 1 },
+            { firstName: "Triana", lastName: "Valdelamar", extras: 0 },
+            { firstName: "Valentina", lastName: "Castellón", extras: 0 },
+            { firstName: "Vivi", lastName: "Orozco", extras: 0 },
+            { firstName: "Víctor", lastName: "Salcedo", extras: 0 },
+            { firstName: "Víctor", lastName: "Vergara", extras: 0 },
+            { firstName: "Waidis", lastName: "Waidis", extras: 0 },
+            { firstName: "Wilmar", lastName: "Smith", extras: 0 },
+            { firstName: "Yoel", lastName: "Londoño", extras: 1 },
+            { firstName: "Yovana", lastName: "Gallardo", extras: 1 }
+        ];
+
+        // Generate unique IDs for each guest
+        const guests = GUESTS_DATA.map((g, i) => ({
+            id: `guest_${i}`,
+            ...g,
+            fullName: `${g.firstName} ${g.lastName}`
+        })).sort((a, b) => a.lastName.localeCompare(b.lastName, 'es'));
+
+        // State
+        let checkIns = {};
+        let deviceId = '';
+        let isOnline = navigator.onLine;
+        let currentTab = 'list';
+        let selectedGuest = null;
+
+        // Initialize
+        function init() {
+            deviceId = getDeviceId();
+            document.getElementById('deviceInfo').textContent = `Dispositivo: ${deviceId.slice(-6).toUpperCase()}`;
+            
+            loadState();
+            renderGuestList();
+            updateStats();
+            setupEventListeners();
+            setupSync();
+        }
+
+        function getDeviceId() {
+            let id = localStorage.getItem('checkin_device_id');
+            if (!id) {
+                id = 'dev_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('checkin_device_id', id);
+            }
+            return id;
+        }
+
+        function loadState() {
+            const saved = localStorage.getItem('checkin_state');
+            if (saved) {
+                checkIns = JSON.parse(saved);
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem('checkin_state', JSON.stringify(checkIns));
+            localStorage.setItem('checkin_last_update', Date.now().toString());
+        }
+
+        function renderGuestList(filter = '') {
+            const container = document.getElementById('guestList');
+            const searchTerm = filter.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            
+            const filtered = guests.filter(g => {
+                const name = g.fullName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                return name.includes(searchTerm);
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.3-4.3"></path>
+                        </svg>
+                        <p>No se encontraron invitados</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            let currentLetter = '';
+
+            filtered.forEach(guest => {
+                const firstLetter = guest.lastName.charAt(0).toUpperCase();
+                if (firstLetter !== currentLetter) {
+                    currentLetter = firstLetter;
+                    html += `<div class="letter-group"><div class="letter-header">${currentLetter}</div>`;
+                }
+
+                const isChecked = checkIns[guest.id];
+                const initials = guest.firstName.charAt(0) + guest.lastName.charAt(0);
+                const extrasText = guest.extras > 0 ? `+${guest.extras} acompañante${guest.extras > 1 ? 's' : ''}` : 'Sin acompañantes';
+
+                html += `
+                    <div class="guest-card ${isChecked ? 'checked' : ''}" onclick="showModal('${guest.id}')">
+                        <div class="guest-avatar">${isChecked ? '✓' : initials}</div>
+                        <div class="guest-info">
+                            <div class="guest-name">${guest.fullName}</div>
+                            <div class="guest-extras">${extrasText}</div>
+                        </div>
+                        <div class="guest-check">
+                            <svg class="check-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function showModal(guestId) {
+            selectedGuest = guests.find(g => g.id === guestId);
+            if (!selectedGuest) return;
+
+            const isChecked = checkIns[guestId];
+            const initials = selectedGuest.firstName.charAt(0) + selectedGuest.lastName.charAt(0);
+            const extrasText = selectedGuest.extras > 0 
+                ? `${selectedGuest.extras + 1} personas (1 + ${selectedGuest.extras})` 
+                : '1 persona';
+
+            document.getElementById('modalAvatar').textContent = initials;
+            document.getElementById('modalName').textContent = selectedGuest.fullName;
+            document.getElementById('modalExtras').textContent = extrasText;
+
+            const buttonsHtml = isChecked
+                ? `<button class="modal-btn cancel" onclick="closeModal()">Cerrar</button>
+                   <button class="modal-btn undo" onclick="toggleCheckIn('${guestId}')">Deshacer</button>`
+                : `<button class="modal-btn cancel" onclick="closeModal()">Cancelar</button>
+                   <button class="modal-btn confirm" onclick="toggleCheckIn('${guestId}')">Check-In</button>`;
+
+            document.getElementById('modalButtons').innerHTML = buttonsHtml;
+            document.getElementById('modalOverlay').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('show');
+            selectedGuest = null;
+        }
+
+        function toggleCheckIn(guestId) {
+            const guest = guests.find(g => g.id === guestId);
+            if (!guest) return;
+
+            if (checkIns[guestId]) {
+                delete checkIns[guestId];
+                showToast(`${guest.firstName} removido`, false);
+            } else {
+                checkIns[guestId] = {
+                    time: new Date().toISOString(),
+                    device: deviceId,
+                    extras: guest.extras
+                };
+                showToast(`✓ ${guest.firstName} ingresó`, true);
+            }
+
+            saveState();
+            renderGuestList(document.getElementById('searchInput').value);
+            updateStats();
+            closeModal();
+
+            if (currentTab === 'report') {
+                renderReport();
+            }
+        }
+
+        function updateStats() {
+            const total = guests.reduce((sum, g) => sum + 1 + g.extras, 0);
+            const checkedCount = Object.keys(checkIns).reduce((sum, id) => {
+                const guest = guests.find(g => g.id === id);
+                return sum + 1 + (guest ? guest.extras : 0);
+            }, 0);
+
+            document.getElementById('totalGuests').textContent = total;
+            document.getElementById('checkedIn').textContent = checkedCount;
+            document.getElementById('pending').textContent = total - checkedCount;
+        }
+
+        function renderReport() {
+            const attended = [];
+            const absent = [];
+
+            guests.forEach(guest => {
+                if (checkIns[guest.id]) {
+                    attended.push({ ...guest, checkIn: checkIns[guest.id] });
+                } else {
+                    absent.push(guest);
+                }
+            });
+
+            attended.sort((a, b) => new Date(a.checkIn.time) - new Date(b.checkIn.time));
+
+            let html = '';
+
+            if (attended.length > 0) {
+                html += `
+                    <div class="report-section">
+                        <div class="report-title">
+                            <span>Asistieron</span>
+                            <span class="count">${attended.length}</span>
+                        </div>
+                        ${attended.map(g => `
+                            <div class="report-guest attended">
+                                <div class="report-guest-name">${g.fullName}</div>
+                                ${g.extras > 0 ? `<div class="report-guest-extras">+${g.extras}</div>` : ''}
+                                <div class="report-guest-time">${formatTime(g.checkIn.time)}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            if (absent.length > 0) {
+                html += `
+                    <div class="report-section">
+                        <div class="report-title">
+                            <span>No asistieron</span>
+                            <span class="count">${absent.length}</span>
+                        </div>
+                        ${absent.map(g => `
+                            <div class="report-guest absent">
+                                <div class="report-guest-name">${g.fullName}</div>
+                                ${g.extras > 0 ? `<div class="report-guest-extras">+${g.extras}</div>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            document.getElementById('reportContent').innerHTML = html;
+        }
+
+        function formatTime(isoString) {
+            const date = new Date(isoString);
+            return date.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function exportReport() {
+            const attended = [];
+            const absent = [];
+
+            guests.forEach(guest => {
+                if (checkIns[guest.id]) {
+                    attended.push({ ...guest, checkIn: checkIns[guest.id] });
+                } else {
+                    absent.push(guest);
+                }
+            });
+
+            let csv = 'Nombre,Apellido,Acompañantes,Estado,Hora de Ingreso\n';
+
+            attended.forEach(g => {
+                csv += `"${g.firstName}","${g.lastName}",${g.extras},Asistió,${formatTime(g.checkIn.time)}\n`;
+            });
+
+            absent.forEach(g => {
+                csv += `"${g.firstName}","${g.lastName}",${g.extras},No asistió,-\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `reporte-desde-el-patio-${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            URL.revokeObjectURL(url);
+
+            showToast('Reporte exportado', true);
+        }
+
+        function showToast(message, isSuccess) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${isSuccess ? 'success' : ''} show`;
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        function setupEventListeners() {
+            // Search
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                renderGuestList(e.target.value);
+            });
+
+            // Tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    currentTab = tab.dataset.tab;
+
+                    if (currentTab === 'list') {
+                        document.getElementById('guestList').classList.remove('hidden');
+                        document.getElementById('reportView').classList.remove('active');
+                    } else {
+                        document.getElementById('guestList').classList.add('hidden');
+                        document.getElementById('reportView').classList.add('active');
+                        renderReport();
+                    }
+                });
+            });
+
+            // Close modal on overlay click
+            document.getElementById('modalOverlay').addEventListener('click', (e) => {
+                if (e.target === e.currentTarget) {
+                    closeModal();
+                }
+            });
+
+            // Online/Offline
+            window.addEventListener('online', () => {
+                isOnline = true;
+                updateSyncStatus();
+                syncNow();
+            });
+
+            window.addEventListener('offline', () => {
+                isOnline = false;
+                updateSyncStatus();
+            });
+        }
+
+        function setupSync() {
+            updateSyncStatus();
+            // Sync every 10 seconds if online
+            setInterval(() => {
+                if (isOnline) {
+                    syncWithOtherDevices();
+                }
+            }, 10000);
+        }
+
+        function updateSyncStatus() {
+            const dot = document.getElementById('syncDot');
+            const text = document.getElementById('syncText');
+
+            if (isOnline) {
+                dot.classList.remove('offline');
+                text.textContent = 'Sincronizado';
+            } else {
+                dot.classList.add('offline');
+                text.textContent = 'Offline';
+            }
+        }
+
+        function syncNow() {
+            if (!isOnline) {
+                showToast('Sin conexión', false);
+                return;
+            }
+            syncWithOtherDevices();
+            showToast('Sincronizado', true);
+        }
+
+        function syncWithOtherDevices() {
+            // For multi-device sync, we use localStorage with broadcast
+            // In a real app, this would use a backend or WebSocket
+            const channel = new BroadcastChannel('checkin_sync');
+            channel.postMessage({ checkIns, timestamp: Date.now() });
+            channel.close();
+        }
+
+        // Listen for sync from other tabs/devices
+        const syncChannel = new BroadcastChannel('checkin_sync');
+        syncChannel.onmessage = (event) => {
+            const { checkIns: remoteCheckIns, timestamp } = event.data;
+            
+            // Merge check-ins (latest wins for each guest)
+            Object.keys(remoteCheckIns).forEach(id => {
+                const remote = remoteCheckIns[id];
+                const local = checkIns[id];
+                
+                if (!local || new Date(remote.time) > new Date(local.time)) {
+                    checkIns[id] = remote;
+                }
+            });
+
+            saveState();
+            renderGuestList(document.getElementById('searchInput').value);
+            updateStats();
+
+            if (currentTab === 'report') {
+                renderReport();
+            }
+        };
+
+        // Start app
+        init();
+    </script>
+</body>
+</html>
